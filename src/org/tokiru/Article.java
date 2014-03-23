@@ -14,15 +14,17 @@ import java.util.regex.Pattern;
 /**
  * Created by tokiru on 3/23/14.
  */
-public class Extractor {
-    public static void main(String[] args) {
-        for(int i = 1; i < 100; i++) {
-            Document doc = downloadPage(getArticleURL(i));
-            System.out.println(articleInDraft(doc));
+public class Article {
+    private Document doc = null;
+
+    public Article(int id) {
+        try {
+            doc = Jsoup.connect(getArticleURL(id)).get();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        //Document doc = downloadPage(getArticleURL(200000));
-        //System.out.println(extractText(doc));
     }
+
 
     private static String getArticleURL(int id) {
         StringBuilder sb = new StringBuilder("http://habrahabr.ru/post/");
@@ -31,26 +33,15 @@ public class Extractor {
         return sb.toString();
     }
 
-    private static Document downloadPage(String URL) {
-        Document result = null;
-        try {
-            result = Jsoup.connect(URL).get();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return result;
+    public int extractPositiveVotesCount() {
+        return extractVotesCount(1);
     }
 
-    private static int extractPositiveVotesCount(Document doc) {
-        return extractVotesCount(doc, 1);
+    public int extractNegativeVotesCount() {
+        return extractVotesCount(2);
     }
 
-    private static int extractNegativeVotesCount(Document doc) {
-        return extractVotesCount(doc, 2);
-    }
-
-    private static int extractVotesCount(Document doc, int id) {
+    private int extractVotesCount(int id) {
         Elements e = doc.select("span.score");
         if (e.size() == 0) {
             return 0;
@@ -69,13 +60,13 @@ public class Extractor {
         return numbers.get(id).intValue();
     }
 
-    private static String extractAuthor(Document doc) {
+    public String extractAuthor() {
         Elements e = doc.select("div.author");
         String[] a = e.text().split(" ");
         return a[0];
     }
 
-    private static int extractViewCount(Document doc) {
+    public int extractViewCount() {
         Elements e = doc.select("div.pageviews");
         Integer count = null;
         try {
@@ -87,7 +78,7 @@ public class Extractor {
         return count.intValue();
     }
 
-    private static int extractFavouriteCount(Document doc) {
+    public int extractFavouriteCount() {
         Elements e = doc.select("div.favs_count");
 
         Integer count = null;
@@ -100,7 +91,7 @@ public class Extractor {
         return count.intValue();
     }
 
-    private static int extractCommentsCount(Document doc) {
+    public int extractCommentsCount() {
         Elements e = doc.select("span[id=comments_count]");
 
         Integer count = null;
@@ -113,17 +104,17 @@ public class Extractor {
         return count.intValue();
     }
 
-    private static String extractTimeAndDate(Document doc) {
+    public String extractTimeAndDate() {
         Elements e = doc.select("div.published");
         return e.text();
     }
 
-    private static String extractText(Document doc) {
+    public String extractText() {
         Elements e = doc.select("div.content.html_format");
         return e.text();
     }
 
-    private static boolean articleInDraft(Document doc) {
+    public boolean articleInDraft() {
         return  doc.title().equals("Хабрахабр — Доступ к странице ограничен");
     }
 }
