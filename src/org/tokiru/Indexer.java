@@ -37,7 +37,7 @@ public class Indexer {
             e.printStackTrace();
         }
 
-        for (int i = 1; i < 1000; i++) {
+        for (int i = 1000; i < 10000; i++) {
             Article article = new Article(i);
             //article.save();
             if (!article.articleInDraft()) {
