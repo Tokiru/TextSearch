@@ -5,7 +5,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -14,15 +14,18 @@ import java.util.regex.Pattern;
 /**
  * Created by tokiru on 3/23/14.
  */
-public class Article {
-    private Document doc = null;
+public class Article implements Serializable{
+    private Document doc = new Document("aoeu");
+    private int id;
 
     public Article(int id) {
         try {
             doc = Jsoup.connect(getArticleURL(id)).get();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+
+        this.id = id;
     }
 
 
@@ -116,5 +119,44 @@ public class Article {
 
     public boolean articleInDraft() {
         return  doc.title().equals("Хабрахабр — Доступ к странице ограничен");
+    }
+
+    public void save() {
+        StringBuilder fileName = new StringBuilder("articles/");
+        fileName.append(id);
+
+        File file = new File(String.valueOf(fileName));
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(file, false);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        ObjectOutputStream oos = null;
+        try {
+             oos = new ObjectOutputStream(fos);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            oos.writeObject(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            oos.flush();
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
