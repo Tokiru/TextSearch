@@ -16,17 +16,12 @@ import java.util.regex.Pattern;
  */
 public class Extractor {
     public static void main(String[] args) {
-        /*for(int i = 1; i < 100; i++) {
+        for(int i = 1; i < 100; i++) {
             Document doc = downloadPage(getArticleURL(i));
-            System.out.println(extractAuthor(doc));
-            System.out.println(extractViewCount(doc));
-            System.out.println(extractFavouriteCount(doc));
-            System.out.println(extractCommentsCount(doc));
-            System.out.println(extractTimeAndDate(doc));
-        }*/
-
-        Document doc = downloadPage(getArticleURL(200000));
-        System.out.println(extractText(doc));
+            System.out.println(articleInDraft(doc));
+        }
+        //Document doc = downloadPage(getArticleURL(200000));
+        //System.out.println(extractText(doc));
     }
 
     private static String getArticleURL(int id) {
@@ -35,8 +30,6 @@ public class Extractor {
         sb.append('/');
         return sb.toString();
     }
-
-    //*[@id="infopanel_post_1"]/div[1]/div/span
 
     private static Document downloadPage(String URL) {
         Document result = null;
@@ -128,5 +121,9 @@ public class Extractor {
     private static String extractText(Document doc) {
         Elements e = doc.select("div.content.html_format");
         return e.text();
+    }
+
+    private static boolean articleInDraft(Document doc) {
+        return  doc.title().equals("Хабрахабр — Доступ к странице ограничен");
     }
 }
