@@ -5,7 +5,6 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -38,6 +37,10 @@ public class Indexer {
         }
 
         for (int i = 11000; i < 100000; i++) {
+            if ((i % 10000) == 0) {
+                writer.close();
+                writer = new IndexWriter(dir, config);
+            }
             Article article = new Article(i);
             if (!article.articleInDraft()) {
                 article.save();
