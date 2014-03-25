@@ -16,31 +16,144 @@ import java.util.regex.Pattern;
  */
 public class Article implements Serializable{
     private Document doc = new Document("aoeu");
+    private boolean loadFromFile;
+    private boolean fail;
     private int id;
 
-    public Article(int id) {
+    int positiveVotesCount = -1;
+    int negativeVotesCount = -1;
+    String author = "VASA";
+    int viewCount = -1;
+    int favouriteCount = -1;
+    int commentCount = -1;
+    String timeAndDate = "VASA";
+    String title = "VASATITLE";
+    String text = "VASAETOBARADA";
+
+    public Article(int id) throws IOException {
+        this.id = id;
+        fail = false;
+        loadFromFile = lookForFile();
+
+        if (loadFromFile) {
+            BufferedReader reader = new BufferedReader(new FileReader(new File(getFileName())));
+            reader.readLine();
+            author = reader.readLine();
+            positiveVotesCount = new Integer(reader.readLine());
+            negativeVotesCount = new Integer(reader.readLine());
+            viewCount = new Integer(reader.readLine());
+            favouriteCount = new Integer(reader.readLine());
+            commentCount = new Integer(reader.readLine());
+            timeAndDate = reader.readLine();
+            title = reader.readLine();
+            text = reader.readLine();
+        } else {
+            try {
+                doc = Jsoup.connect(getArticleURL(id)).get();
+            } catch (Exception e) {
+                fail = true;
+            }
+            positiveVotesCount = extractPositiveVotesCount();
+            negativeVotesCount = extractNegativeVotesCount();
+            author = extractAuthor();
+            viewCount = extractViewCount();
+            favouriteCount = extractFavouriteCount();
+            commentCount = extractCommentsCount();
+            timeAndDate = extractTimeAndDate();
+            title = extractTitle();
+            text = extractText();
+        }
+    }
+
+    public int getPositiveVotesCount() {
+        return positiveVotesCount;
+    }
+
+    public int getViewCount() {
+        return viewCount;
+    }
+
+    public int getNegativeVotesCount() {
+        return negativeVotesCount;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public String getTimeAndDate() {
+        return timeAndDate;
+    }
+
+    public int getCommentCount() {
+        return commentCount;
+    }
+
+    public int getFavouriteCount() {
+        return favouriteCount;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void save() throws IOException {
+        if (fail || loadFromFile) return ;
+
+        File file = new File(getFileName());
         try {
-            doc = Jsoup.connect(getArticleURL(id)).get();
-        } catch (Exception e) {
+            file.createNewFile();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        this.id = id;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+        writer.write(Integer.toString(id));
+        writer.write("\n");
+        writer.write(extractAuthor());
+        writer.write("\n");
+        writer.write(Integer.toString(positiveVotesCount));
+        writer.write("\n");
+        writer.write(Integer.toString(negativeVotesCount));
+        writer.write("\n");
+        writer.write(Integer.toString(viewCount));
+        writer.write("\n");
+        writer.write(Integer.toString(favouriteCount));
+        writer.write("\n");
+        writer.write(Integer.toString(commentCount));
+        writer.write("\n");
+        writer.write(timeAndDate);
+        writer.write("\n");
+        writer.write(title);
+        writer.write("\n");
+        writer.write(text);
+        writer.write("\n");
+        writer.flush();
+        writer.close();
     }
 
+    private boolean lookForFile() {
+        File file = new File(getFileName());
+        return file.exists();
+    }
+
+    private String getFileName() {
+        return "articles/" + id;
+    }
 
     private static String getArticleURL(int id) {
-        StringBuilder sb = new StringBuilder("http://habrahabr.ru/post/");
-        sb.append(id);
-        sb.append('/');
-        return sb.toString();
+        return "http://habrahabr.ru/post/" + id + "/";
     }
 
-    public int extractPositiveVotesCount() {
+    private int extractPositiveVotesCount() {
         return extractVotesCount(1);
     }
 
-    public int extractNegativeVotesCount() {
+    private int extractNegativeVotesCount() {
         return extractVotesCount(2);
     }
 
@@ -54,109 +167,79 @@ public class Article implements Serializable{
         Pattern p = Pattern.compile("-?\\d+");
         Matcher m = p.matcher(data);
 
-        List<Integer> numbers = new ArrayList<Integer>();
+        List<Integer> numbers = new ArrayList<>();
 
         while (m.find()) {
             numbers.add(new Integer(m.group()));
         }
 
-        return numbers.get(id).intValue();
+        return numbers.get(id);
     }
 
-    public String extractAuthor() {
+    private String extractAuthor() {
         Elements e = doc.select("div.author");
         String[] a = e.text().split(" ");
         return a[0];
     }
 
-    public int extractViewCount() {
+    private String extractTitle() {
+        Elements e = doc.select("span.post_title");
+        return e.text();
+    }
+
+    private int extractViewCount() {
         Elements e = doc.select("div.pageviews");
-        Integer count = null;
+        Integer count;
         try {
             count = new Integer(e.text());
         } catch (NumberFormatException ex) {
             return 0;
         }
 
-        return count.intValue();
+        return count;
     }
 
-    public int extractFavouriteCount() {
+    private int extractFavouriteCount() {
         Elements e = doc.select("div.favs_count");
 
-        Integer count = null;
+        Integer count;
         try {
             count = new Integer(e.text());
         } catch (NumberFormatException ex) {
             return 0;
         }
 
-        return count.intValue();
+        return count;
     }
 
-    public int extractCommentsCount() {
+    private int extractCommentsCount() {
         Elements e = doc.select("span[id=comments_count]");
 
-        Integer count = null;
+        Integer count;
         try {
             count = new Integer(e.text());
         } catch (NumberFormatException ex) {
             return 0;
         }
 
-        return count.intValue();
+        return count;
     }
 
-    public String extractTimeAndDate() {
+    private String extractTimeAndDate() {
         Elements e = doc.select("div.published");
         return e.text();
     }
 
-    public String extractText() {
+    private String extractText() {
         Elements e = doc.select("div.content.html_format");
         return e.text();
     }
 
     public boolean articleInDraft() {
+        if (fail) {
+            return true;
+        }
+
         return  doc.title().equals("Хабрахабр — Доступ к странице ограничен");
-    }
-
-    public void save() {
-        StringBuilder fileName = new StringBuilder("articles/");
-        fileName.append(id);
-
-        File file = new File(String.valueOf(fileName));
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file, false);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        ObjectOutputStream oos = null;
-        try {
-             oos = new ObjectOutputStream(fos);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            oos.writeObject(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            oos.flush();
-            oos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

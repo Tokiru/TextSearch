@@ -26,6 +26,7 @@ public class Search {
         IndexSearcher searcher = new IndexSearcher(reader);
         Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_47);
 
+        System.out.println(reader.numDocs());
 
         QueryParser parser = new QueryParser(Version.LUCENE_47, "content", analyzer);
         Query query = parser.parse("Нейронная сеть");

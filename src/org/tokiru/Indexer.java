@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Indexer {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Directory dir = null;
         try {
             dir = FSDirectory.open(new File("index"));
@@ -37,20 +37,21 @@ public class Indexer {
             e.printStackTrace();
         }
 
-        for (int i = 1000; i < 10000; i++) {
+        for (int i = 11000; i < 100000; i++) {
             Article article = new Article(i);
-            //article.save();
             if (!article.articleInDraft()) {
+                article.save();
                 List<Field> fields = new ArrayList<>();
                 fields.add(new IntField("id", i, Field.Store.YES));
-                fields.add(new IntField("positiveVote", article.extractPositiveVotesCount(), Field.Store.YES));
-                fields.add(new IntField("negativeVote", article.extractNegativeVotesCount(), Field.Store.YES));
-                fields.add(new IntField("viewCount", article.extractViewCount(), Field.Store.YES));
-                fields.add(new IntField("favouriteCount", article.extractFavouriteCount(), Field.Store.YES));
-                fields.add(new IntField("commentCount", article.extractCommentsCount(), Field.Store.YES));
-                fields.add(new StringField("author", article.extractAuthor(), Field.Store.YES));
-                fields.add(new StringField("date", article.extractTimeAndDate(), Field.Store.YES));
-                fields.add(new TextField("content", article.extractText(), Field.Store.YES));
+                fields.add(new IntField("positiveVote", article.getPositiveVotesCount(), Field.Store.YES));
+                fields.add(new IntField("negativeVote", article.getNegativeVotesCount(), Field.Store.YES));
+                fields.add(new IntField("viewCount", article.getViewCount(), Field.Store.YES));
+                fields.add(new IntField("favouriteCount", article.getFavouriteCount(), Field.Store.YES));
+                fields.add(new IntField("commentCount", article.getCommentCount(), Field.Store.YES));
+                fields.add(new StringField("author", article.getAuthor(), Field.Store.YES));
+                fields.add(new StringField("date", article.getTimeAndDate(), Field.Store.YES));
+                fields.add(new TextField("content", article.getText(), Field.Store.YES));
+                fields.add(new TextField("", article.getTitle(), Field.Store.YES));
 
                 Document doc = new Document();
                 for (Field field : fields) {
